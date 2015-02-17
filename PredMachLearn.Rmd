@@ -1,0 +1,59 @@
+---
+title: "Practical Machine Learning"
+output: html_document
+---
+
+## Read the raw data and load the R packages
+The data came from this source: http://groupware.les.inf.puc-rio.br/har.
+```{r}
+data_raw_training <- read.csv("pml-training.csv")
+data_raw_testing <- read.csv("pml-testing.csv")
+library(caret)
+library(randomForest)
+```
+
+## Select the predictors
+I selected the variables as the predictors of my model based on:
+1) the values of the variables were not NA;
+2) the variables were collected from accelerometers on the belt, forearm, arm, and dumbell.
+```{r}
+predictor_list = names(data_raw_testing[,colSums(is.na(data_raw_testing)) != nrow(data_raw_testing)])
+predictor_list = predictor_list[grep('belt|arm|dumbbell|forearm',predictor_list)]
+predictor_list
+data_refined_training = data.frame(data_raw_training$classe,data_raw_training[,predictor_list])
+```
+
+## Split the data into training set (60%) and cross validation set (40%)
+```{r}
+trainIndex = createDataPartition(data_refined_training$data_raw_training.classe, p = 0.60,list=FALSE)
+training = data_refined_training[trainIndex,]
+crossVal = data_refined_training[-trainIndex,]
+```
+
+## Fit the random forest model
+I used the function trainControl to customize the amount of bootstrap for reducing the demand on the computer. On this specific case bootstrap was not improving accuracy of the model at all. Thus I set the amount of bootstrap at 1. This method was referred to the thread from the discussion forum posted by Francisco Jaramillo.
+```{r}
+ctrl = trainControl(method='boot',number=1)
+modelFit <- train(training$data_raw_training.classe~. ,method='rf',data=training,trControl=ctrl)
+```
+
+## Check the results for training set
+The overall accuracy was 100% for the training set which meant the model fit our data well.
+```{r}
+predTrain <- predict(modelFit,training)
+confusionMatrix(training$data_raw_training.classe,predTrain)
+```
+
+## Estimate the out of sample error with cross-validation
+The overall accuracy was 99.18% for the cros-validation set, that is, the out of sample error was 0.92%.
+```{r}
+predCrossVal <- predict(modelFit,crossVal)
+confusionMatrix(crossVal$data_raw_training.classe,predCrossVal)
+```
+
+## Predict 20 different test cases
+```{r}
+data_refined_testing = data.frame(data_raw_testing[,predictor_list])
+answers <- predict(modelFit,data_refined_testing)
+answers
+```
