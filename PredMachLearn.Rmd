@@ -45,7 +45,7 @@ confusionMatrix(training$data_raw_training.classe,predTrain)
 ```
 
 ## Estimate the out of sample error with cross-validation
-The overall accuracy was 99.18% for the cros-validation set, that is, the out of sample error was 0.92%.
+The overall accuracy was 99.36% for the cros-validation set, that is, the out of sample error was 0.64%.
 ```{r}
 predCrossVal <- predict(modelFit,crossVal)
 confusionMatrix(crossVal$data_raw_training.classe,predCrossVal)
